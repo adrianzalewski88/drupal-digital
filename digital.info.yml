@@ -5,3 +5,9 @@ package: Custom
 type: module
 core_version_requirement: ^10.3 || ^11
 license: GPL-2.0-or-later
+
+dependencies:
+  - feeds:feeds
+  - image:image
+  - drupal:taxonomy
+  - drupal:views

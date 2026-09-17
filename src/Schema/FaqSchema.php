@@ -67,10 +67,10 @@ return [
 
 "@type"=>"FAQPage",
 
-"@id"=>$this->url."/#faq",
-"url"=>$this->url."/",
+"@id"=>$this->url."#faq",
+"url"=>$this->url,
 "isPartOf"=> [
-    "@id" => $this->url . "/#webpage",
+    "@id" => $this->url . "#webpage",
 ],
 "mainEntity"=>$questions
 

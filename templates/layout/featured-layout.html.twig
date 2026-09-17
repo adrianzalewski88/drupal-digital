@@ -1,0 +1,32 @@
+{#
+/**
+ * @file
+ * Featured two-column layout.
+ */
+#}
+
+{% set second_output %}
+  {{ content.second }}
+{% endset %}
+
+{% set second_output = second_output|trim %}
+
+<div class="row g-3">
+
+  {% if second_output is not empty %}
+    <div class="col-9 digital-fields-spaced">
+      {{ content.first }}
+    </div>
+
+    <div class="col-3">
+      <div class="digital-image">
+        {{ second_output }}
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12 digital-fields-spaced">
+      {{ content.first }}
+    </div>
+  {% endif %}
+
+</div>

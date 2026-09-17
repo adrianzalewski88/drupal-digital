@@ -1,0 +1,79 @@
+<div class="card shadow-sm mb-4" itemscope itemtype="https://schema.org/Person">
+
+    <div class="card-body">
+
+        <div class="row g-3 align-items-center">
+
+            <div class="col-auto">
+
+                <img
+                    src="{{ author.image }}"
+                    alt="{{ author.name }}"
+                    class="rounded-circle img-fluid"
+                    width="120"
+                    height="120"
+                    loading="lazy"
+                    itemprop="image">
+
+            </div>
+
+            <div class="col">
+
+
+                <div class="small text-muted">Author Information</div>
+                <h2 class="h4 mb-1" itemprop="name">
+                    {{ author.name }}
+                </h2>
+
+                <p class="text-muted fw-semibold mb-3" itemprop="jobTitle">
+                    {{ author.title }}
+                </p>
+
+                <p class="mb-3" itemprop="description">
+                    {{ author.bio }}
+                </p>
+
+                <div class="small text-muted mb-3">
+
+                    <div>
+
+                        <strong>Published:</strong>
+
+                        <time
+                            datetime="{{ published_iso }}"
+                            itemprop="datePublished">
+                            {{ published }}
+                        </time>
+
+                    </div>
+
+                    <div>
+
+                        <strong>Last Updated:</strong>
+
+                        <time
+                            datetime="{{ updated_iso }}"
+                            itemprop="dateModified">
+                            {{ updated }}
+                        </time>
+
+                    </div>
+
+                </div>
+
+                <a
+                    href="{{ author.url }}"
+                    class="btn btn-outline-primary btn-sm m-0"
+                    itemprop="url">
+
+                    Learn more about {{ author.name }}
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

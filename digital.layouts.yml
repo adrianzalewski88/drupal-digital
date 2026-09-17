@@ -1,0 +1,34 @@
+featured_layout:
+  label: 'Featured Layout'
+  category: 'Digital'
+  template: templates/layout/featured-layout
+  default_region: first
+
+  regions:
+    first:
+      label: 'Column One'
+
+    second:
+      label: 'Column Two'
+
+teaser_layout:
+  label: 'Teaser Layout'
+  category: 'Digital'
+  template: templates/layout/teaser-layout
+  default_region: first
+
+  regions:
+    first:
+      label: 'Column One'
+
+    second:
+      label: 'Column Two'
+
+    third:
+      label: 'Column Three'
+
+    fourth:
+      label: 'Column Four'
+
+    fifth:
+      label: 'Column Five'

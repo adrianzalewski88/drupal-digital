@@ -12,50 +12,81 @@ class ItemListSchema {
 
   protected string $title;
 
+  protected string $description;
+
 
   public function __construct(
     array $products,
     string $url,
-    string $title
+    string $title,
+    string $description
   ){
 
-    $this->products=$products;
+    $this->products = $products;
 
-    $this->url=$url;
+    $this->url = $url;
 
-    $this->title=$title;
+    $this->title = $title;
+
+    $this->description = $description;
 
   }
-
 
 
   public function build(): array {
 
 
-    $items=[];
+    $items = [];
 
-    $position=1;
-
-
-    foreach($this->products as $product){
+    $position = 1;
 
 
-      $schema =
+    foreach ($this->products as $product) {
+
+
+      /*
+       * Build the Product schema.
+       *
+       * ProductSchema contains the complete product
+       * information including:
+       *
+       * - Product name
+       * - Product URL
+       * - Product ID
+       * - Description
+       * - Image
+       * - Brand
+       * - Category
+       * - Gender
+       * - Price
+       * - Currency
+       * - Offer
+       * - Availability
+       * - Seller
+       * - Additional properties
+       */
+      $productSchema =
         new ProductSchema($product);
 
 
+      $productData =
+        $productSchema->build();
 
-      $items[]=[
 
-        "@type"=>"ListItem",
+      /*
+       * Add the complete Product entity
+       * directly inside the ListItem.
+       */
+      $items[] = [
 
-        "position"=>$position++,
+        "@type" =>
+          "ListItem",
 
-        "item"=>[
+        "position" =>
+          $position++,
 
-          "@id"=>$schema->getId()
-
-        ]
+        "item" =>
+          $productData,
 
       ];
 
@@ -63,21 +94,28 @@ class ItemListSchema {
     }
 
 
-
     return [
 
-      "@type"=>"ItemList",
+      "@type" =>
+        "ItemList",
 
-      "@id"=>$this->url."/#products",
+      "@id" =>
+        $this->url . "#featured-products",
 
-      "name"=>"Products",
+      "name" =>
+        $this->title,
 
-      "numberOfItems"=>count($items),
+      "description" =>
+        $this->description,
 
-      "itemListOrder"=>
+      "numberOfItems" =>
+        count($items),
+
+      "itemListOrder" =>
         "https://schema.org/ItemListOrderDescending",
 
-      "itemListElement"=>$items
+      "itemListElement" =>
+        $items,
 
     ];
 

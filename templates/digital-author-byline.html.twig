@@ -1,0 +1,44 @@
+<aside class="author-byline"
+       itemscope
+       itemtype="https://schema.org/Person"
+       aria-label="Author information">
+
+  <div class="author-byline__author">
+    <span class="author-byline__label">By</span>
+
+    <a href="{{ author_url }}"
+       class="author-byline__name"
+       itemprop="url">
+      <span itemprop="name">{{ author_name }}</span>
+    </a>
+  </div>
+
+  <div class="author-byline__meta">
+
+    <a href="mailto:{{ author_email }}"
+       class="author-byline__email"
+       itemprop="email">
+      {{ author_email }}
+    </a>
+
+    <time class="author-byline__published"
+          datetime="{{ created_timestamp|date('c') }}"
+          itemprop="dateCreated">
+      Published {{ created }}
+    </time>
+
+    {% if updated_timestamp > created_timestamp %}
+      <time class="author-byline__updated"
+            datetime="{{ updated_timestamp|date('c') }}"
+            itemprop="dateModified">
+        Updated {{ updated }}
+      </time>
+    {% endif %}
+
+  </div>
+
+  <meta itemprop="name" content="{{ author_name }}">
+  <link itemprop="url" href="{{ author_url }}">
+  <meta itemprop="email" content="{{ author_email }}">
+
+</aside>

@@ -1,0 +1,53 @@
+{#
+/**
+ * @file
+ * Teaser four-column layout.
+ */
+#}
+
+
+{% set first_output %}
+  {{ content.first }}
+{% endset %}
+{% set first_output = first_output|trim %}
+
+
+
+<div class="digital-teaser style-teaser">
+  <div class="row g-0">
+    <div class="col-2 col-lg-1">
+      <div class="digital-image">
+{% if first_output is not empty %}
+{{ first_output }}
+{% else %}
+<img class="img-fluid" src="/themes/custom/digitaltheme/images/urban-clothing-style-default-02.webp" alt="Style Placeholder Image">
+{% endif %}
+</div>
+    </div>
+
+    <div class="col-7 col-lg-9 p-3 d-flex card">
+      <div class="row g-3 flex-grow-1 align-items-center">
+
+        <div class="col-12 col-sm-12 col-md-12 col-lg-4">
+          {{ content.second }}
+        </div>
+
+        <div class="col-12 col-sm-12 col-md-12 col-lg-4">
+          {{ content.third }}
+        </div>
+
+        <div class="col-12 col-sm-12 col-md-12 col-lg-4">
+          {{ content.fourth }}
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="col-3 col-lg-2 digital-teaser-actions d-flex">
+      {{ content.fifth }}
+    </div>
+
+  </div>
+</div>
+

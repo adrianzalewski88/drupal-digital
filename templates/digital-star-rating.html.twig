@@ -1,0 +1,10 @@
+<div class="digital-rating">
+  {% for i in 1..total %}
+    {% if i <= active %}
+      <i class="fa-solid fa-star"></i>
+    {% else %}
+      <i class="fa-regular fa-star"></i>
+    {% endif %}
+  {% endfor %}
+  <span class="small">{{ rating }}</span>
+</div>

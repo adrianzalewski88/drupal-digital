@@ -28,21 +28,25 @@ return [
 
 "@type"=>"CollectionPage",
 
-"@id"=>$this->url."/#products",
+"@id"=>$this->url."#collection",
 
-"url"=>$this->url . "/",
+"url"=>$this->url,
 
 "name"=>$this->entity->label()." Clothing Collection",
 
-"description"=> $this->entity->label() . " products, browse clothing, and streetwear styles from trusted online retailers.",
+"description"=>"Browse " . $this->entity->label() . " products, apparel, and streetwear styles from trusted online retailers.",
 
 "isPartOf" => [
-  "@id" => $this->url . "/#webpage",
+  "@id" => $this->url . "#webpage",
 ],
 
-"mainEntity" => [
-  "@id" => $this->url . "/#products",
+"about" => [
+  "@id" => "https://myurbanclothing.com/#organization",
 ],
+
+//"mainEntity" => [
+//  "@id" => $this->url . "#collection",
+//],
 
 ];
 

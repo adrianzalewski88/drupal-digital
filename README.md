@@ -42,6 +42,13 @@ DigitalTheme is built as a Bootstrap 5 Drupal subtheme. Bootstrap-based Drupal
 themes commonly use subthemes to provide custom templates, styling, and
 site-specific presentation while keeping reusable functionality separate. :contentReference[oaicite:2]{index=2}
 
+## Live Demo
+
+View Digital running in a production discovery platform environment:
+
+https://myurbanclothing.com/
+
+
 ---
 
 ## Installation

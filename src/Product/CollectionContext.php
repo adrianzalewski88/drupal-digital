@@ -76,7 +76,7 @@ class CollectionContext {
 
     switch($alias){
 
-      case "home":
+      case "discover":
 
         return [
 
@@ -85,26 +85,10 @@ class CollectionContext {
           "brand"=>NULL,
 
           "title"=>
-            "Urban Clothing Collection",
+            "Popular Urban Clothing Collection",
 
           "description"=>
             "Browse popular urban clothing, streetwear, and apparel."
-
-        ];
-
-      case "shop":
-
-        return [
-
-          "type"=>"all",
-
-          "brand"=>NULL,
-
-          "title"=>
-            "Urban Clothing Collection",
-
-          "description"=>
-            "Browse the latest urban clothing, streetwear, and apparel."
 
         ];
 
@@ -122,7 +106,7 @@ class CollectionContext {
             "Men's Urban Clothing Collection",
 
           "description"=>
-            "Shop men's urban clothing, streetwear, and fashion apparel."
+            "Browse men's urban clothing, streetwear, and fashion apparel."
 
         ];
 
@@ -140,7 +124,7 @@ class CollectionContext {
             "Women's Urban Clothing Collection",
 
           "description"=>
-            "Shop women's urban clothing, streetwear, and fashion apparel."
+            "Browse women's urban clothing, streetwear, and fashion apparel."
 
         ];
 

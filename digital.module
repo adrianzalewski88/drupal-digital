@@ -9,6 +9,12 @@
  */
 
 use Drupal\taxonomy\Entity\Term;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\taxonomy\TermInterface;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Plugin\views\query\Sql;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+
 
 /**
  * Implements hook_theme().
@@ -33,6 +39,413 @@ function digital_theme() {
         'date_string' => '',
       ],
     ],
+
+
+    'digital_brand_browse_products_block' => [
+      'variables' => [
+        'term_name' => NULL,
+      ],
+      'template' => 'digital-brand-browse-products-block',
+    ],
+
+    'digital_style_browse_products_block' => [
+      'variables' => [
+        'term_name' => NULL,
+      ],
+      'template' => 'digital-style-browse-products-block',
+    ],
+
+
+'digital_author_bio_block' => [
+  'variables' => [
+    'author' => NULL,
+    'published' => NULL,
+    'updated' => NULL,
+    'published_iso' => NULL,
+    'updated_iso' => NULL,
+    'node' => NULL,
+  ],
+  'template' => 'digital-author-bio-block',
+],
+
+
+    'digital_star_rating' => [
+      'variables' => [
+        'active' => 0,
+        'total' => 5,
+        'rating' => 0,
+      ],
+      'template' => 'digital-star-rating',
+    ],
+
+
+'digital_author_byline' => [
+  'variables' => [
+    'author_name' => NULL,
+    'author_email' => NULL,
+    'author_url' => NULL,
+    'created' => NULL,
+    'updated' => NULL,
+    'created_timestamp' => NULL,
+    'updated_timestamp' => NULL,
+    'entity_type' => NULL,
+    'entity_id' => NULL,
+  ],
+  'template' => 'digital-author-byline',
+  'path' => 'templates',
+],
+
+
+
+
   ];
 }
+
+
+
+
+/**
+ * Implements hook_views_post_execute().
+ */
+function digital_views_post_execute(ViewExecutable $view) {
+
+  /*
+   * Only alter the Related Brands block.
+   */
+  if (
+    $view->id() !== 'digital_brands_listing' ||
+    $view->current_display !== 'brand_related_brands'
+  ) {
+    return;
+  }
+
+  /*
+   * Get the current brand term.
+   */
+  $current_term = \Drupal::routeMatch()->getParameter('taxonomy_term');
+
+  if (!$current_term instanceof TermInterface) {
+    return;
+  }
+
+  /*
+   * Make sure the current brand has a score.
+   */
+  if (
+    !$current_term->hasField('field_digital_brand_score') ||
+    $current_term->get('field_digital_brand_score')->isEmpty()
+  ) {
+    return;
+  }
+
+  /*
+   * Get the current brand score.
+   */
+  $current_score = (float) $current_term
+    ->get('field_digital_brand_score')
+    ->value;
+
+  /*
+   * Get the TIDs returned by Views.
+   */
+  $tids = [];
+
+  foreach ($view->result as $row) {
+    if (!empty($row->tid)) {
+      $tids[] = (int) $row->tid;
+    }
+  }
+
+  if (empty($tids)) {
+    return;
+  }
+
+  /*
+   * Load the related brand terms.
+   */
+  $terms = \Drupal::entityTypeManager()
+    ->getStorage('taxonomy_term')
+    ->loadMultiple($tids);
+
+  /*
+   * Sort the Views results by brand score difference.
+   */
+  usort(
+    $view->result,
+    function ($a, $b) use ($terms, $current_score) {
+
+      $score_a = NULL;
+      $score_b = NULL;
+
+      /*
+       * Get score for brand A.
+       */
+      if (
+        isset($terms[$a->tid]) &&
+        $terms[$a->tid]->hasField('field_digital_brand_score') &&
+        !$terms[$a->tid]->get('field_digital_brand_score')->isEmpty()
+      ) {
+        $score_a = (float) $terms[$a->tid]
+          ->get('field_digital_brand_score')
+          ->value;
+      }
+
+      /*
+       * Get score for brand B.
+       */
+      if (
+        isset($terms[$b->tid]) &&
+        $terms[$b->tid]->hasField('field_digital_brand_score') &&
+        !$terms[$b->tid]->get('field_digital_brand_score')->isEmpty()
+      ) {
+        $score_b = (float) $terms[$b->tid]
+          ->get('field_digital_brand_score')
+          ->value;
+      }
+
+      /*
+       * Brands without a score go last.
+       */
+      if ($score_a === NULL && $score_b === NULL) {
+        return 0;
+      }
+
+      if ($score_a === NULL) {
+        return 1;
+      }
+
+      if ($score_b === NULL) {
+        return -1;
+      }
+
+      /*
+       * Calculate the difference from the current brand.
+       */
+      $difference_a = abs($score_a - $current_score);
+      $difference_b = abs($score_b - $current_score);
+
+      /*
+       * Primary sort:
+       * Smallest score difference first.
+       */
+      if ($difference_a < $difference_b) {
+        return -1;
+      }
+
+      if ($difference_a > $difference_b) {
+        return 1;
+      }
+
+      /*
+       * Secondary sort:
+       * Higher brand score first.
+       */
+      if ($score_a > $score_b) {
+        return -1;
+      }
+
+      if ($score_a < $score_b) {
+        return 1;
+      }
+
+      return 0;
+    }
+  );
+
+  $view->result = array_slice($view->result, 0, 6);
+
+}
+
+
+
+
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function digital_views_data_alter(array &$data): void {
+  /*
+   * Add a custom contextual filter to taxonomy term Views.
+   *
+   * This creates a virtual Views field that uses our custom
+   * RelatedBrandStyles argument plugin.
+   */
+  $data['taxonomy_term_field_data']['digital_related_brand_styles'] = [
+    'title' => t('Related brands by digital style'),
+    'help' => t(
+      'Find digital brands that share one or more styles with the current brand.'
+    ),
+
+    /*
+     * We are not creating a real database field.
+     *
+     * The contextual filter plugin handles the query itself.
+     */
+    'real field' => 'tid',
+
+    /*
+     * Register our custom Views argument handler.
+     */
+    'argument' => [
+      'id' => 'digital_related_brand_styles',
+    ],
+  ];
+}
+
+
+
+
+
+
+
+
+/** * Implements hook_entity_insert(). */
+function digital_entity_insert(EntityInterface $entity): void {
+
+  // Only nodes.
+  if ($entity->getEntityTypeId() !== 'node') { return;
+  }
+  // Only digital_product content type.
+  if ($entity->bundle() !== 'digital_product') { return;
+  }
+  // Skip if image already exists.
+  if (!$entity->get('field_digital_product_image')->isEmpty()) { return;
+  }
+  // Get imported image URL.
+  //$image_url = $entity->get('field_digital_product_image_url')->value ?? NULL;
+
+  $image_url = NULL;
+
+  if (!$entity->get('field_digital_product_image_url')->isEmpty()) {
+    $image_url = $entity->get('field_digital_product_image_url')->uri;
+  }
+
+  if (!$image_url) {
+    return;
+  }
+
+  $queue = \Drupal::queue('digital_product_image_queue'); $queue->createItem([ 'nid' => $entity->id(), 'image_url' => $image_url, 'alt' => 
+    $entity->label(),
+  ]);
+}
+
+
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function digital_page_attachments_alter(array &$attachments): void {
+  $request = \Drupal::request();
+
+  // Make the page cache vary based on query parameters.
+  $attachments['#cache']['contexts'][] = 'url.query_args';
+
+
+
+  $noindex = FALSE;
+
+  // URLs containing query parameters should be noindex, follow.
+  if ($request->query->count() > 0) {
+    $noindex = TRUE;
+  }
+
+  // All digital_product pages should be noindex, follow.
+  $route = \Drupal::routeMatch();
+
+  if ($route->getRouteName() === 'entity.node.canonical') {
+    $node = $route->getParameter('node');
+
+    if ($node instanceof \Drupal\node\NodeInterface) {
+      if ($node->bundle() === 'digital_product') {
+        $noindex = TRUE;
+      }
+    }
+  }
+
+if ($route->getRouteName() === 'entity.taxonomy_term.canonical') {
+  $term = $route->getParameter('taxonomy_term');
+
+  if ($term instanceof \Drupal\taxonomy\TermInterface) {
+    $noindex_vocabularies = [
+      'digital_categories',
+      'digital_color',
+      'digital_retailer',
+      'digital_trend',
+    ];
+
+    if (in_array($term->bundle(), $noindex_vocabularies, TRUE)) {
+      $noindex = TRUE;
+    }
+  }
+}
+
+  // Add noindex, follow when either condition is met.
+  if ($noindex) {
+    $attachments['#attached']['html_head'][] = [
+      [
+        '#type' => 'html_tag',
+        '#tag' => 'meta',
+        '#attributes' => [
+          'name' => 'robots',
+          'content' => 'noindex, follow',
+        ],
+      ],
+      'digital_query_noindex',
+    ];
+  }
+
+
+
+/***
+  // URLs containing query parameters should be noindex, follow.
+  if ($request->query->count() > 0) {
+    $attachments['#attached']['html_head'][] = [
+      [
+        '#type' => 'html_tag',
+        '#tag' => 'meta',
+        '#attributes' => [
+          'name' => 'robots',
+          'content' => 'noindex, follow',
+        ],
+      ],
+      'digital_query_noindex',
+    ];
+  }
+***/
+
+}
+
+
+
+/***
+  if (empty($context['entity'])) {
+    return;
+  }
+
+  $entity = $context['entity'];
+
+  // Taxonomy term handling.
+  if ($entity->getEntityTypeId() === 'taxonomy_term') {
+
+    if ($entity->bundle() === 'digital_categories') {
+      $tags['robots'] = [
+        'noindex' => 'foo',
+        'follow' => 'foo',
+      ];
+    }
+
+  }
+
+
+  // Node handling.
+  if ($entity->getEntityTypeId() === 'node') {
+
+    if ($entity->bundle() === 'digital_product') {
+      $tags['robots'] = [
+        'noindex' => 'foo',
+        'follow' => 'foo',
+      ];
+    }
+  }
+***/
 

@@ -4,6 +4,10 @@ namespace Drupal\digital\Schema;
 
 use Drupal\node\Entity\Node;
 use Drupal\Core\Url;
+use Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Image\ImageFactory;
 
 class ProductSchema {
 
@@ -18,7 +22,7 @@ class ProductSchema {
 
   public function getId(): string {
 
-    return $this->productUrl();
+    return $this->productUrl() . "#product";
 
   }
 
@@ -82,27 +86,27 @@ class ProductSchema {
 
 
     $schema = [
-
       "@type"=>"Product",
-
-      "@id"=>$this->productUrl(),
-
+//      "@id"=>$this->productUrl() . "#product",
       "name"=>$product->label(),
-
-
+//      "url"=>$this->productUrl(),
+//      "mainEntityOfPage"=>[
+//        "@id"=>$this->productUrl() . "#webpage",
+//      ],
       "offers"=>[
-
         "@type"=>"Offer",
-
+//        "@id"=>$this->productUrl() . "#offer",
         "url"=>$this->buyUrl(),
-
+//        "url"=>$this->productUrl(),
         "price"=>$price,
-
         "priceCurrency"=>$currency,
-
-        "availability"=>
-          "https://schema.org/InStock"
-
+        "availability"=>"https://schema.org/InStock",
+        "itemCondition" => "https://schema.org/NewCondition",
+        "seller" => [
+          "@type" => "Organization",
+          "name" => "Karmaloop",
+        ],
+        "businessFunction" => "https://purl.org/goodrelations/v1#Sell",
       ]
 
     ];
@@ -112,41 +116,101 @@ class ProductSchema {
     /*
      * Description
      */
+/****
+// Default description.
+$description = $product->label() . ' available on My Urban Clothing. Discover streetwear and fashion products from trusted online retailers.';
 
-    if (
-      !$product
-        ->get('field_digital_description')
-        ->isEmpty()
-    ){
+// Use custom description if available.
+if (!$product->get('field_digital_description')->isEmpty()) {
 
-      $schema["description"] =
-        strip_tags(
-          $product
-          ->get('field_digital_description')
-          ->value
-        );
+  // Long text field.
+  $description = $product->get('field_digital_description')->value;
 
-    }
+  // Strip any HTML.
+  $description = Html::decodeEntities(strip_tags($description));
+
+  // Normalize whitespace.
+  $description = preg_replace('/\s+/', ' ', trim($description));
+
+  // Try to end on the first sentence if it fits.
+  if (preg_match('/^(.{50,220}?[.!?])(\s|$)/u', $description, $matches)) {
+    $description = trim($matches[1]);
+  }
+  else {
+    // Otherwise truncate nicely on a word boundary.
+    $description = Unicode::truncate(
+      $description,
+      160,
+      TRUE,   // Word boundary
+      TRUE    // Add ellipsis
+    );
+  }
+}
 
 
+
+      $schema["description"] = $description;
+//      $schema["description"] =
+//        strip_tags(
+//          $product
+//          ->get('field_digital_description')
+//          ->value
+//        );
+
+**/
 
     /*
      * Image
      */
+/** @var \Drupal\file\FileInterface $file */
+if (!$product->get('field_digital_product_image')->isEmpty()) {
 
-    if (
-      !$product
-        ->get('field_digital_product_image_url')
-        ->isEmpty()
-    ){
+  $file = $product->get('field_digital_product_image')->entity;
 
-      $schema["image"] =
-        $product
-        ->get('field_digital_product_image_url')
-        ->uri;
+  if ($file) {
 
+    $image_url = \Drupal::service('file_url_generator')
+      ->generateAbsoluteString($file->getFileUri());
+
+    $image = \Drupal::service('image.factory')
+      ->get($file->getFileUri());
+
+    $schema['image'] = [
+      '@type' => 'ImageObject',
+      'url' => $image_url,
+    ];
+
+    if ($image->isValid()) {
+      $schema['image']['width'] = $image->getWidth();
+      $schema['image']['height'] = $image->getHeight();
     }
 
+  }
+}
+
+
+
+//    if (
+//      !$product
+//        ->get('field_digital_product_image')
+//        ->isEmpty()
+//    ){
+//
+//      $schema["image"] =
+//        $product
+//        ->get('field_digital_product_image')
+//        ->uri;
+//
+//    }
+//if (!$product->get('field_digital_product_image')->isEmpty()) {
+//  $file = $product->get('field_digital_product_image')->entity;
+//
+//  if ($file) {
+//
+//$schema['image'] = \Drupal::service('file_url_generator')
+//  ->generateAbsoluteString($file->getFileUri());
+//  }
+//}
 
 
     /*
@@ -167,6 +231,7 @@ class ProductSchema {
 
       $schema["brand"] = [
 
+        "@type" => "Brand",
         "@id" =>
           Url::fromRoute(
             'entity.taxonomy_term.canonical',
@@ -176,13 +241,18 @@ class ProductSchema {
           )
           ->setAbsolute()
           ->toString()
-          . "/#brand"
+          . "#brand",
+	"name" => $brand->label()
 
       ];
 
     }
 
 
+
+    $category_array = [
+      "Clothing"
+    ];
 
     /*
      * Category
@@ -200,11 +270,13 @@ class ProductSchema {
         ->entity;
 
 
-      $schema["category"] =
+      $category_array[] =
         $category->label();
 
     }
 
+
+    $schema["category"] = $category_array;
 
 
     /*
@@ -240,6 +312,40 @@ class ProductSchema {
 
     }
 
+    $schema["isRelatedTo"]=[
+      "@id"=>"https://myurbanclothing.com/#organization",
+    ];
+
+    $schema["additionalProperty"]=[
+      [
+        "@type"=>"PropertyValue",
+        "name"=>"Style",
+        "value"=>"Streetwear",
+      ],
+    ];
+
+
+    if (
+      !$product
+        ->get('field_digital_category')
+        ->isEmpty()
+    ){
+
+      $category =
+        $product
+        ->get('field_digital_category')
+        ->entity;
+
+
+      $schema["additionalProperty"][] = [
+        "@type"=>"PropertyValue",
+        "name"=>"Product Type",
+        "value"=>$category->label(),
+      ];
+
+
+    }
+
 
     return $schema;
 
@@ -258,8 +364,7 @@ class ProductSchema {
       )
       ->setAbsolute()
       ->toString()
-      .
-      "#product";
+      ;
 
   }
 

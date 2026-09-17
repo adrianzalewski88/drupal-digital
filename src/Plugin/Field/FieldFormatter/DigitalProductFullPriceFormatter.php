@@ -49,9 +49,20 @@ class DigitalProductFullPriceFormatter extends FormatterBase {
       // Render each element as markup.
 
       if(!empty($sale_price['value']) && $sale_price['value'] != $item->value) {
-        $output = '<div class="product-price">' . $currency['value'] . $sale_price['value'] . '</div><div class="product-price-compare">' . $currency['value'] . $item->value . '</div>';
+        $output = '<div class="product-price">'
+ . '<span>' . $currency['value'] . '</span>'
+ . '<span>' . $sale_price['value'] . '</span>'
+// . '<link itemprop="availability" href="https://schema.org/InStock">'
+ . '</div><div class="product-price-compare">'
+ . $currency['value']
+ . $item->value
+ . '</div>';
       } else {
-        $output = '<div class="product-price">' . $currency['value'] . $item->value . '</div>';
+        $output = '<div class="product-price">'
+ . '<span>' . $currency['value'] . '</span>'
+ . '<span>' . $item->value . '</span>'
+// . '<link itemprop="availability" href="https://schema.org/InStock">'
+ . '</div>';
       }
 
       $element[$delta] = ['#markup' => $output];

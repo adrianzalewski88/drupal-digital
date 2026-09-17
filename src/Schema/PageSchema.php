@@ -26,14 +26,14 @@ return [
 
 "@type"=>"WebPage",
 
-"@id"=>$this->url . "/",
+"@id"=>$this->url,
 
-"url"=>$this->url . "/",
+"url"=>$this->url,
 
 "name"=>$this->node->label(),
 
 "isPartOf"=>[
-"@id"=>"https://my-urban-clothing.com/#website"
+"@id"=>"https://myurbanclothing.com/#website"
 ],
 
 "description"=>strip_tags(
@@ -42,7 +42,7 @@ $this->node->get('body')->value ?? ''
 "inLanguage"=>"en-US",
 
 "mainEntity" => [
-  "@id" => $this->url . "/#collection",
+  "@id" => $this->url . "#collection",
 ],
 
 ];

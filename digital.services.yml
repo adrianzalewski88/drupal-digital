@@ -18,3 +18,78 @@ services:
     arguments:
       - '@path.current'
       - '@path_alias.manager'
+  digital.brand_sync:
+    class: Drupal\digital\Service\BrandSyncService
+    arguments:
+      - '@digital.brand_product_stats'
+      - '@digital.brand_prompt_builder'
+      - '@digital.openai_client'
+      - '@digital.brand_mapper'
+  digital.brand_product_stats:
+    class: Drupal\digital\Service\BrandProductStats
+    arguments:
+      - '@entity_type.manager'
+  digital.brand_prompt_builder:
+    class: Drupal\digital\Service\BrandPromptBuilder
+    arguments:
+      - '@entity_type.manager'
+  digital.openai_client:
+    class: Drupal\digital\Service\OpenAIClient
+    arguments:
+      - '@http_client'
+      - '@logger.channel.digital'
+  digital.brand_mapper:
+    class: Drupal\digital\Service\BrandMapper
+    arguments:
+      - '@entity_type.manager'
+  logger.channel.digital:
+    parent: logger.channel_base
+    arguments:
+      - 'digital'
+  digital.brand_image_sync:
+    class: Drupal\digital\Service\BrandImageSyncService
+    arguments:
+      - '@entity_type.manager'
+      - '@digital.wikipedia_image'
+      - '@digital.remote_image_downloader'
+      - '@logger.channel.digital'
+
+  digital.wikipedia_image:
+    class: Drupal\digital\Service\WikipediaImageService
+    arguments:
+      - '@digital.wikipedia_api'
+
+  digital.wikipedia_api:
+    class: Drupal\digital\Service\WikipediaApiClient
+    arguments:
+      - '@http_client'
+
+  digital.remote_image_downloader:
+    class: Drupal\digital\Service\RemoteImageDownloader
+    arguments:
+      - '@http_client'
+      - '@file.repository'
+      - '@file_system'
+  digital.brand_instagram_image_sync:
+    class: Drupal\digital\Service\BrandInstagramImageSyncService
+    arguments:
+      - '@entity_type.manager'
+      - '@digital.instagram_profile_image'
+      - '@digital.remote_image_downloader'
+      - '@logger.channel.digital'
+
+  digital.instagram_profile_image:
+    class: Drupal\digital\Service\InstagramProfileImageService
+    arguments:
+      - '@digital.instagram_api'
+
+  digital.instagram_api:
+    class: Drupal\digital\Service\InstagramApiClient
+    arguments:
+      - '@http_client'
+      - '@logger.channel.digital'
+
+  digital.early_hints_subscriber:
+    class: Drupal\digital\EventSubscriber\EarlyHintsSubscriber
+    tags:
+      - { name: event_subscriber }
